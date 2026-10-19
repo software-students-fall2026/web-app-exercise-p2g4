@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dining Hall Reviews</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    >
+  </head>
+
+  <body>
+    <header>
+      <nav>
+        <a href="{{ url_for('index') }}">Dining Hall Reviews</a>
+
+        <div class="nav-links">
+          {% if current_user.is_authenticated %}
+            <span>Hi, {{ current_user.username }}</span>
+            <a href="{{ url_for('new_review') }}">Add a review</a>
+
+            <form action="{{ url_for('logout') }}" method="post" class="logout-form">
+              <button type="submit">Log out</button>
+            </form>
+          {% else %}
+            <a href="{{ url_for('signup') }}">Sign up</a>
+            <a href="{{ url_for('login') }}">Log in</a>
+          {% endif %}
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <p class="message {{ category }}">{{ message }}</p>
+        {% endfor %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>
