@@ -1,0 +1,85 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+
+<div class="profile-page">
+  <section class="profile-header">
+    <div class="profile-avatar">S</div>
+
+    <div class="profile-info">
+      <h1>{{ profile.username }}</h1>
+      <p>NYU Dining Explorer</p>
+    </div>
+  </section>
+
+  <section class="profile-stats">
+    <div>
+      <strong>{{ reviews|length }}</strong>
+      <span>Reviews</span>
+    </div>
+    <div>
+      <strong>{{ followers_count }}</strong>
+      <span>Followers</span>
+    </div>
+    <div>
+      <strong>{{ following_count }}</strong>
+      <span>Following</span>
+    </div>
+  </section>
+
+  <section class="profile-lists">
+    <h2>My Dining Lists</h2>
+
+    <div class="list-grid">
+      <div class="list-card">
+        <h3>❤️ Favorites</h3>
+        {% for hall in favorites %}
+          <p>{{ hall }}</p>
+        {% else %}
+          <p>No favorites yet.</p>
+        {% endfor %}
+      </div>
+
+      <div class="list-card">
+        <h3>🔖 Want to Go</h3>
+        {% for hall in want_to_go %}
+          <p>{{ hall }}</p>
+        {% else %}
+          <p>No saved dining halls yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="profile-reviews">
+    <h2>Recent Activity</h2>
+
+    
+{% for review in reviews %}
+  <article class="review-card">
+    <h3>{{ review.dining_hall_name }}</h3>
+
+    <p class="review-rating">
+      Rating: {{ review.rank }}/5
+    </p>
+
+    <p>{{ review.comment }}</p>
+
+    <p class="review-date">
+      Meal date: {{ review.meal_date }}
+    </p>
+
+    <a href="{{ url_for('edit_review', review_id=review._id) }}"
+       class="edit-review-btn">
+      Edit Review
+    </a>
+  </article>
+{% else %}
+  <p>You haven't written any reviews yet.</p>
+{% endfor %}
+
+  </section>
+</div>
+{% endblock %}
