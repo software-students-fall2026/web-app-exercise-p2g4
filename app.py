@@ -186,6 +186,27 @@ def index():
     return render_template("index.html", reviews=reviews)
 
 
+@app.get("/profile")
+@login_required
+def profile():
+    # Retrieve reviews written by the logged-in user
+    user_reviews = list(
+        reviews_collection.find(
+            {"author_id": current_user.id}
+        ).sort("created_at", -1)
+    )
+
+    return render_template(
+        "profile.html",
+        profile=current_user,
+        reviews=user_reviews,
+        followers_count=0,
+        following_count=0,
+        favorites=[],
+        want_to_go=[],
+    )
+
+
 @app.route("/reviews/new", methods=["GET", "POST"])
 @login_required
 def new_review():
