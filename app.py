@@ -13,9 +13,26 @@ from flask_login import (
     login_user,
     logout_user,
 )
-from pymongo import MongoClient
+from pymongo import ASCENDING, DESCENDING, MongoClient
 from pymongo.errors import DuplicateKeyError
 from werkzeug.security import check_password_hash, generate_password_hash
+
+
+# This is the single canonical restaurant list used by profiles and reviews.
+DINING_HALLS = [
+    "Downstein",
+    "ThirdNorth",
+    "Lipton",
+    "Kosher Cafe",
+    "Kimmel",
+    "JasperKane",
+    "Palladium",
+    "Upstein",
+    "Crave",
+    "Flaovr Lab",
+    "Cafe 181",
+    "Cafe 370",
+]
 
 
 load_dotenv()
@@ -29,14 +46,34 @@ client = MongoClient(
 )
 
 db = client[os.environ["MONGO_DB_NAME"]]
+
 users_collection = db["users"]
 reviews_collection = db["reviews"]
+follows_collection = db["follows"]
 
+
+# Protect against duplicate usernames.
 users_collection.create_index("username", unique=True)
+
+# One user may follow another user only once.
+follows_collection.create_index(
+    [
+        ("follower_id", ASCENDING),
+        ("following_id", ASCENDING),
+    ],
+    unique=True,
+)
+
+# Makes profile "recent comment" lookups faster.
+reviews_collection.create_index(
+    [
+        ("author_id", ASCENDING),
+        ("created_at", DESCENDING),
+    ]
+)
 
 
 class User(UserMixin):
-
     def __init__(self, user_document):
         self.id = str(user_document["_id"])
         self.username = user_document["username"]
@@ -51,11 +88,15 @@ login_manager.login_message_category = "error"
 
 @login_manager.user_loader
 def load_user(user_id):
-    
     try:
-        user_document = users_collection.find_one({"_id": ObjectId(user_id)})
+        object_id = ObjectId(user_id)
     except InvalidId:
         return None
+
+    user_document = users_collection.find_one(
+        {"_id": object_id},
+        {"password_hash": 0},
+    )
 
     if user_document is None:
         return None
@@ -63,8 +104,25 @@ def load_user(user_id):
     return User(user_document)
 
 
+def get_user_or_404(user_id):
+    """Find a user without ever returning password_hash to a template."""
+    try:
+        object_id = ObjectId(user_id)
+    except InvalidId:
+        abort(404)
+
+    user_document = users_collection.find_one(
+        {"_id": object_id},
+        {"password_hash": 0},
+    )
+
+    if user_document is None:
+        abort(404)
+
+    return user_document
+
+
 def get_review_or_404(review_id):
-    
     try:
         review = reviews_collection.find_one({"_id": ObjectId(review_id)})
     except InvalidId:
@@ -77,14 +135,79 @@ def get_review_or_404(review_id):
 
 
 def require_review_owner(review):
-    
+    """Only the original review author may edit or delete the review."""
     if review.get("author_id") != current_user.id:
         abort(403)
 
 
+def get_profile_data(profile_user):
+    """
+    Calculate profile values from reviews/follows instead of storing
+    duplicate Followers, Following, or Recent Comment fields in users.
+    """
+    profile_id = str(profile_user["_id"])
+
+    followers_count = follows_collection.count_documents(
+        {"following_id": profile_id}
+    )
+
+    following_count = follows_collection.count_documents(
+        {"follower_id": profile_id}
+    )
+
+    recent_review = reviews_collection.find_one(
+        {"author_id": profile_id},
+        sort=[("created_at", DESCENDING)],
+    )
+
+    return {
+        "followers_count": followers_count,
+        "following_count": following_count,
+        "recent_review": recent_review,
+    }
+
+
+def get_users_from_follows(follow_documents, related_id_field):
+    """
+    Convert follow documents into user documents.
+
+    related_id_field:
+    - follower_id: used on a Followers page
+    - following_id: used on a Following page
+    """
+    object_ids = []
+
+    for follow in follow_documents:
+        try:
+            object_ids.append(ObjectId(follow[related_id_field]))
+        except (InvalidId, KeyError, TypeError):
+            continue
+
+    if not object_ids:
+        return []
+
+    user_documents = list(
+        users_collection.find(
+            {"_id": {"$in": object_ids}},
+            {"password_hash": 0},
+        )
+    )
+
+    users_by_id = {
+        str(user_document["_id"]): user_document
+        for user_document in user_documents
+    }
+
+    # Keep the order from the follows query.
+    return [
+        users_by_id[str(object_id)]
+        for object_id in object_ids
+        if str(object_id) in users_by_id
+    ]
+
+
 def get_review_fields_from_form():
-    
-    dining_hall_name = request.form.get("dining_hall_name", "").strip()
+    dining_hall_name = request.form.get("dining_hall_name", "")
     food = request.form.get("food", "").strip()
     comment = request.form.get("comment", "").strip()
     meal_date = request.form.get("meal_date", "")
@@ -94,7 +217,10 @@ def get_review_fields_from_form():
     except ValueError:
         rank = 0
 
-    if not dining_hall_name or not food or not meal_date:
+    if dining_hall_name not in DINING_HALLS:
+        return None, "Please choose a dining hall from the list."
+
+    if not food or not meal_date:
         return None, "Please complete every required field."
 
     if rank not in range(1, 6):
@@ -107,6 +233,16 @@ def get_review_fields_from_form():
         "comment": comment,
         "meal_date": meal_date,
     }, None
+
+
+def get_favorite_restaurant_from_form():
+    favorite_restaurant = request.form.get("favorite_restaurant", "")
+
+    # Blank means the user cleared their favourite restaurant.
+    if favorite_restaurant and favorite_restaurant not in DINING_HALLS:
+        return None, "Please choose a restaurant from the list."
+
+    return favorite_restaurant, None
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -131,7 +267,9 @@ def signup():
                 {
                     "username": username,
                     "password_hash": generate_password_hash(password),
+                    "favorite_restaurant": "",
                     "created_at": datetime.now(timezone.utc),
+                    "updated_at": datetime.now(timezone.utc),
                 }
             )
         except DuplicateKeyError:
@@ -140,6 +278,7 @@ def signup():
 
         user_document = users_collection.find_one({"_id": result.inserted_id})
         login_user(User(user_document))
+
         flash("Account created. You are now logged in.", "success")
         return redirect(url_for("index"))
 
@@ -182,28 +321,170 @@ def logout():
 @app.get("/")
 @login_required
 def index():
-    reviews = list(reviews_collection.find().sort("created_at", -1))
+    reviews = list(reviews_collection.find().sort("created_at", DESCENDING))
     return render_template("index.html", reviews=reviews)
 
 
-@app.get("/profile")
+@app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
-    # Retrieve reviews written by the logged-in user
-    user_reviews = list(
-        reviews_collection.find(
-            {"author_id": current_user.id}
-        ).sort("created_at", -1)
-    )
+    """
+    Own profile:
+    - GET: display profile
+    - POST: save Favourite Restaurant
+    """
+    profile_user = get_user_or_404(current_user.id)
+
+    if request.method == "POST":
+        favorite_restaurant, error = get_favorite_restaurant_from_form()
+
+        if error:
+            flash(error, "error")
+        else:
+            users_collection.update_one(
+                {"_id": profile_user["_id"]},
+                {
+                    "$set": {
+                        "favorite_restaurant": favorite_restaurant,
+                        "updated_at": datetime.now(timezone.utc),
+                    }
+                },
+            )
+
+            flash("Profile saved.", "success")
+            return redirect(url_for("profile"))
+
+    profile_data = get_profile_data(profile_user)
 
     return render_template(
         "profile.html",
-        profile=current_user,
-        reviews=user_reviews,
-        followers_count=0,
-        following_count=0,
-        favorites=[],
-        want_to_go=[],
+        profile_user=profile_user,
+        is_own_profile=True,
+        is_following=False,
+        dining_halls=DINING_HALLS,
+        **profile_data,
+    )
+
+
+@app.get("/users/<user_id>")
+@login_required
+def public_profile(user_id):
+    """Display another user's profile."""
+    profile_user = get_user_or_404(user_id)
+
+    # Own profile has the editable settings form.
+    if str(profile_user["_id"]) == current_user.id:
+        return redirect(url_for("profile"))
+
+    is_following = (
+        follows_collection.find_one(
+            {
+                "follower_id": current_user.id,
+                "following_id": str(profile_user["_id"]),
+            }
+        )
+        is not None
+    )
+
+    profile_data = get_profile_data(profile_user)
+
+    return render_template(
+        "profile.html",
+        profile_user=profile_user,
+        is_own_profile=False,
+        is_following=is_following,
+        dining_halls=DINING_HALLS,
+        **profile_data,
+    )
+
+
+@app.post("/users/<user_id>/follow")
+@login_required
+def follow_user(user_id):
+    profile_user = get_user_or_404(user_id)
+    profile_user_id = str(profile_user["_id"])
+
+    if profile_user_id == current_user.id:
+        flash("You cannot follow yourself.", "error")
+        return redirect(url_for("profile"))
+
+    try:
+        follows_collection.insert_one(
+            {
+                "follower_id": current_user.id,
+                "following_id": profile_user_id,
+                "created_at": datetime.now(timezone.utc),
+            }
+        )
+        flash(f"You are now following {profile_user['username']}.", "success")
+    except DuplicateKeyError:
+        flash(f"You already follow {profile_user['username']}.", "error")
+
+    return redirect(url_for("public_profile", user_id=profile_user_id))
+
+
+@app.post("/users/<user_id>/unfollow")
+@login_required
+def unfollow_user(user_id):
+    profile_user = get_user_or_404(user_id)
+    profile_user_id = str(profile_user["_id"])
+
+    if profile_user_id == current_user.id:
+        flash("You cannot unfollow yourself.", "error")
+        return redirect(url_for("profile"))
+
+    result = follows_collection.delete_one(
+        {
+            "follower_id": current_user.id,
+            "following_id": profile_user_id,
+        }
+    )
+
+    if result.deleted_count:
+        flash(f"You unfollowed {profile_user['username']}.", "success")
+    else:
+        flash(f"You were not following {profile_user['username']}.", "error")
+
+    return redirect(url_for("public_profile", user_id=profile_user_id))
+
+
+@app.get("/users/<user_id>/followers")
+@login_required
+def followers_list(user_id):
+    profile_user = get_user_or_404(user_id)
+
+    follow_documents = list(
+        follows_collection.find(
+            {"following_id": str(profile_user["_id"])}
+        ).sort("created_at", DESCENDING)
+    )
+
+    followers = get_users_from_follows(follow_documents, "follower_id")
+
+    return render_template(
+        "followers.html",
+        profile_user=profile_user,
+        followers=followers,
+    )
+
+
+@app.get("/users/<user_id>/following")
+@login_required
+def following_list(user_id):
+    profile_user = get_user_or_404(user_id)
+
+    follow_documents = list(
+        follows_collection.find(
+            {"follower_id": str(profile_user["_id"])}
+        ).sort("created_at", DESCENDING)
+    )
+
+    following = get_users_from_follows(follow_documents, "following_id")
+
+    return render_template(
+        "following.html",
+        profile_user=profile_user,
+        following=following,
     )
 
 
@@ -220,6 +501,7 @@ def new_review():
                 page_title="Add a review",
                 submit_label="Submit review",
                 review=request.form,
+                dining_halls=DINING_HALLS,
             ), 400
 
         reviews_collection.insert_one(
@@ -239,6 +521,7 @@ def new_review():
         page_title="Add a review",
         submit_label="Submit review",
         review={},
+        dining_halls=DINING_HALLS,
     )
 
 
@@ -258,6 +541,7 @@ def edit_review(review_id):
                 page_title="Edit review",
                 submit_label="Save changes",
                 review=request.form,
+                dining_halls=DINING_HALLS,
             ), 400
 
         reviews_collection.update_one(
@@ -278,6 +562,7 @@ def edit_review(review_id):
         page_title="Edit review",
         submit_label="Save changes",
         review=review,
+        dining_halls=DINING_HALLS,
     )
 
 

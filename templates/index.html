@@ -3,6 +3,7 @@
 {% block content %}
   <div class="page-heading">
     <h1>Recent dining reviews</h1>
+
     <a class="button-link" href="{{ url_for('new_review') }}">
       Add a review
     </a>
@@ -21,10 +22,20 @@
         {% endif %}
 
         <p class="metadata">
-          By {{ review.author_username }} on {{ review.meal_date }}
+          {% if review.get("author_id") and review.get("author_username") %}
+            By
+            <a
+              href="{{ url_for('public_profile', user_id=review.author_id) }}"
+            >
+              {{ review.author_username }}
+            </a>
+            on {{ review.meal_date }}
+          {% else %}
+            By an unavailable user on {{ review.meal_date }}
+          {% endif %}
         </p>
 
-        {% if review.author_id == current_user.id %}
+        {% if review.get("author_id") == current_user.id %}
           <div class="review-actions">
             <a href="{{ url_for('edit_review', review_id=review._id) }}">
               Edit
