@@ -3,6 +3,7 @@
 {% block content %}
   <div class="page-heading">
     <h1>Recent dining reviews</h1>
+
     <a class="button-link" href="{{ url_for('new_review') }}">
       Add a review
     </a>
@@ -13,7 +14,10 @@
       <article class="review-card">
         <h2>{{ review.food }}</h2>
 
-        <p><strong>{{ review.dining_hall_name }}</strong></p>
+        <p>
+          <strong>{{ review.dining_hall_name }}</strong>
+        </p>
+
         <p>Rank: {{ review.rank }} / 5</p>
 
         {% if review.comment %}
@@ -21,21 +25,36 @@
         {% endif %}
 
         <p class="metadata">
-          By {{ review.author_username }} on {{ review.meal_date }}
+          {% if review.get("author_id") and review.get("author_username") %}
+            By
+            <a
+              href="{{ url_for('public_profile', user_id=review.author_id) }}"
+            >
+              {{ review.author_username }}
+            </a>
+            on {{ review.meal_date }}
+          {% else %}
+            By an unavailable user on {{ review.meal_date }}
+          {% endif %}
         </p>
 
-        {% if review.author_id == current_user.id %}
+        {% if review.get("author_id") == current_user.id %}
           <div class="review-actions">
-            <a href="{{ url_for('edit_review', review_id=review._id) }}">
+            <a
+              class="secondary-link"
+              href="{{ url_for('edit_review', review_id=review._id) }}"
+            >
               Edit
             </a>
 
             <form
               action="{{ url_for('delete_review', review_id=review._id) }}"
               method="post"
-              class="delete-form"
+              class="inline-form"
             >
-              <button type="submit">Delete</button>
+              <button type="submit" class="danger-button">
+                Delete
+              </button>
             </form>
           </div>
         {% endif %}

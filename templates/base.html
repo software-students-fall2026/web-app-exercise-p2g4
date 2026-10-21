@@ -13,15 +13,25 @@
   <body>
     <header>
       <nav>
-        <a href="{{ url_for('index') }}">Dining Hall Reviews</a>
+        <a class="site-name" href="{{ url_for('index') }}">
+          Dining Hall Reviews
+        </a>
 
         <div class="nav-links">
           {% if current_user.is_authenticated %}
             <span>Hi, {{ current_user.username }}</span>
+            <a href="{{ url_for('index') }}">Home</a>
             <a href="{{ url_for('new_review') }}">Add a review</a>
+            <a href="{{ url_for('own_profile') }}">My profile</a>
 
-            <form action="{{ url_for('logout') }}" method="post" class="logout-form">
-              <button type="submit">Log out</button>
+            <form
+              action="{{ url_for('logout') }}"
+              method="post"
+              class="inline-form"
+            >
+              <button type="submit" class="secondary-button">
+                Log out
+              </button>
             </form>
           {% else %}
             <a href="{{ url_for('signup') }}">Sign up</a>

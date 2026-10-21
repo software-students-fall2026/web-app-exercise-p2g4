@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="page-heading">
+    <h1>{{ profile_user.username }} is following</h1>
+
+    <a
+      class="secondary-link"
+      href="{{ url_for('public_profile', user_id=profile_user._id) }}"
+    >
+      Back to profile
+    </a>
+  </div>
+
+  <p class="metadata">
+    Usernames in this list are intentionally not profile links.
+  </p>
+
+  {% if following %}
+    <ul class="user-list">
+      {% for user in following %}
+        <li>
+          <strong>{{ user.username }}</strong>
+
+          {% if user.get("favorite_restaurant") %}
+            <span>
+              Favourite: {{ user.favorite_restaurant }}
+            </span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>{{ profile_user.username }} is not following anyone yet.</p>
+  {% endif %}
+{% endblock %}

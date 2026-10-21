@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="profile-card">
+    {% if is_own_profile %}
+      <h1>My profile</h1>
+    {% else %}
+      <h1>{{ profile_user.username }}'s profile</h1>
+    {% endif %}
+
+    <dl class="profile-details">
+      <div>
+        <dt>Username</dt>
+        <dd>{{ profile_user.username }}</dd>
+      </div>
+
+      <div>
+        <dt>Favourite Restaurant</dt>
+        <dd>
+          {% if profile_user.get("favorite_restaurant") %}
+            {{ profile_user.favorite_restaurant }}
+          {% else %}
+            No favourite selected
+          {% endif %}
+        </dd>
+      </div>
+    </dl>
+
+    <div class="profile-stats">
+      <a
+        href="{{ url_for('followers_list', user_id=profile_user._id) }}"
+      >
+        {{ followers_count }} Followers
+      </a>
+
+      <a
+        href="{{ url_for('following_list', user_id=profile_user._id) }}"
+      >
+        {{ following_count }} Following
+      </a>
+    </div>
+
+    {% if is_own_profile %}
+      <hr>
+
+      <h2>Profile settings</h2>
+
+      <form method="post">
+        <label>
+          Favourite Restaurant
+          <select name="favorite_restaurant">
+            <option
+              value=""
+              {% if not profile_user.get("favorite_restaurant") %}selected{% endif %}
+            >
+              No favourite selected
+            </option>
+
+            {% for dining_hall in dining_halls %}
+              <option
+                value="{{ dining_hall }}"
+                {% if profile_user.get("favorite_restaurant") == dining_hall %}selected{% endif %}
+              >
+                {{ dining_hall }}
+              </option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <p class="help-text">
+          Username and password are not editable on this page.
+        </p>
+
+        <button type="submit">Save changes</button>
+      </form>
+    {% else %}
+      <div class="follow-action">
+        {% if is_following %}
+          <form
+            action="{{ url_for('unfollow_user', user_id=profile_user._id) }}"
+            method="post"
+            class="inline-form"
+          >
+            <button type="submit" class="secondary-button">
+              Unfollow
+            </button>
+          </form>
+        {% else %}
+          <form
+            action="{{ url_for('follow_user', user_id=profile_user._id) }}"
+            method="post"
+            class="inline-form"
+          >
+            <button type="submit">Follow</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="recent-review">
+    <h2>Recent Comment</h2>
+
+    {% if recent_review %}
+      <article class="review-card">
+        <h3>{{ recent_review.food }}</h3>
+        <p><strong>{{ recent_review.dining_hall_name }}</strong></p>
+        <p>Rank: {{ recent_review.rank }} / 5</p>
+
+        {% if recent_review.comment %}
+          <p>{{ recent_review.comment }}</p>
+        {% else %}
+          <p class="metadata">No written comment.</p>
+        {% endif %}
+
+        <p class="metadata">
+          Posted on {{ recent_review.meal_date }}
+        </p>
+      </article>
+    {% else %}
+      <p>This user has not posted a review yet.</p>
+    {% endif %}
+  </section>
+{% endblock %}
