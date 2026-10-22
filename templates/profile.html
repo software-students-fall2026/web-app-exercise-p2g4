@@ -1,12 +1,17 @@
 
 {% extends "base.html" %}
 
-{% block content %}
+{% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+{% endblock %}
 
+{% block content %}
 <div class="profile-page">
+
   <section class="profile-header">
-    <div class="profile-avatar">S</div>
+    <div class="profile-avatar">
+      {{ profile.username[0]|upper }}
+    </div>
 
     <div class="profile-info">
       <h1>{{ profile.username }}</h1>
@@ -29,57 +34,157 @@
     </div>
   </section>
 
-  <section class="profile-lists">
-    <h2>My Dining Lists</h2>
+   <section class="profile-lists">
+  <h2>My Dining Lists</h2>
 
-    <div class="list-grid">
-      <div class="list-card">
-        <h3>❤️ Favorites</h3>
+  <div class="list-grid">
+
+    <!-- Favorites -->
+    <div class="list-card">
+      <h3>❤️ Favorites</h3>
+
+      <form
+        action="{{ url_for('add_dining_hall', list_type='favorites') }}"
+        method="post"
+        class="add-hall-form"
+      >
+        <label for="favorite-hall">Choose a dining hall</label>
+
+        <select id="favorite-hall" name="dining_hall" required>
+          <option value="" disabled selected>Select a dining hall</option>
+
+          {% for hall in dining_halls %}
+            <option value="{{ hall }}">{{ hall }}</option>
+          {% endfor %}
+        </select>
+
+        <button type="submit" class="add-hall-btn">
+          Add Favorite
+        </button>
+      </form>
+
+      <div class="saved-halls">
         {% for hall in favorites %}
-          <p>{{ hall }}</p>
+          <div class="saved-hall-item">
+            <span>{{ hall }}</span>
+
+            <form
+              action="{{ url_for('remove_dining_hall', list_type='favorites') }}"
+              method="post"
+            >
+              <input type="hidden" name="dining_hall" value="{{ hall }}">
+              <button type="submit" class="remove-hall-btn">
+                Remove
+              </button>
+            </form>
+          </div>
         {% else %}
           <p>No favorites yet.</p>
         {% endfor %}
       </div>
+    </div>
 
-      <div class="list-card">
-        <h3>🔖 Want to Go</h3>
+    <!-- Want to Go -->
+    <div class="list-card">
+      <h3>🔖 Want to Go</h3>
+
+      <form
+        action="{{ url_for('add_dining_hall', list_type='want_to_go') }}"
+        method="post"
+        class="add-hall-form"
+      >
+        <label for="want-to-go-hall">Choose a dining hall</label>
+
+        <select id="want-to-go-hall" name="dining_hall" required>
+          <option value="" disabled selected>Select a dining hall</option>
+
+          {% for hall in dining_halls %}
+            <option value="{{ hall }}">{{ hall }}</option>
+          {% endfor %}
+        </select>
+
+        <button type="submit" class="add-hall-btn">
+          Add to Want to Go
+        </button>
+      </form>
+
+      <div class="saved-halls">
         {% for hall in want_to_go %}
-          <p>{{ hall }}</p>
+          <div class="saved-hall-item">
+            <span>{{ hall }}</span>
+
+            <form
+              action="{{ url_for('remove_dining_hall', list_type='want_to_go') }}"
+              method="post"
+            >
+              <input type="hidden" name="dining_hall" value="{{ hall }}">
+              <button type="submit" class="remove-hall-btn">
+                Remove
+              </button>
+            </form>
+          </div>
         {% else %}
           <p>No saved dining halls yet.</p>
         {% endfor %}
       </div>
     </div>
-  </section>
+
+  </div>
+</section>
+
 
   <section class="profile-reviews">
     <h2>Recent Activity</h2>
 
-    
-{% for review in reviews %}
-  <article class="review-card">
-    <h3>{{ review.dining_hall_name }}</h3>
+    {% for review in reviews %}
+      <article class="review-card">
+        <h3>{{ review.dining_hall_name }}</h3>
 
-    <p class="review-rating">
-      Rating: {{ review.rank }}/5
-    </p>
+        <p>
+          <strong>Food:</strong> {{ review.food }}
+        </p>
 
-    <p>{{ review.comment }}</p>
+        <p class="review-rating">
+          {{ "★" * review.rank }}{{ "☆" * (5 - review.rank) }}
+          <span>({{ review.rank }}/5)</span>
+        </p>
 
-    <p class="review-date">
-      Meal date: {{ review.meal_date }}
-    </p>
+        {% if review.comment %}
+          <p>{{ review.comment }}</p>
+        {% endif %}
 
-    <a href="{{ url_for('edit_review', review_id=review._id) }}"
-       class="edit-review-btn">
-      Edit Review
-    </a>
-  </article>
-{% else %}
-  <p>You haven't written any reviews yet.</p>
-{% endfor %}
+        <p class="review-date">
+          Meal date: {{ review.meal_date }}
+        </p>
 
+        <div class="review-actions">
+          <a href="{{ url_for('edit_review', review_id=review._id) }}"
+             class="edit-review-btn">
+            Edit Review
+          </a>
+
+          <form
+            action="{{ url_for('delete_review', review_id=review._id) }}"
+            method="post"
+            onsubmit="return confirm('Are you sure you want to delete this review?');"
+          >
+            <button type="submit" class="delete-review-btn">
+              Delete
+            </button>
+          </form>
+        </div>
+      </article>
+
+    {% else %}
+      <div class="empty-reviews">
+        <p>You haven't written any reviews yet.</p>
+        <a href="{{ url_for('new_review') }}"
+           class="edit-review-btn">
+          Write Your First Review
+        </a>
+      </div>
+    {% endfor %}
   </section>
+
 </div>
 {% endblock %}

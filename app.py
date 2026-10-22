@@ -35,6 +35,22 @@ reviews_collection = db["reviews"]
 users_collection.create_index("username", unique=True)
 
 
+
+DINING_HALLS = [
+    "Lipton Hall",
+    "Downstein",
+    "Palladium",
+    "Third North",
+    "Weinstein",
+    "Kimmel",
+]
+
+SAVED_LIST_FIELDS = {
+    "favorites": "favorites",
+    "want_to_go": "want_to_go",
+}
+
+
 class User(UserMixin):
 
     def __init__(self, user_document):
@@ -186,15 +202,25 @@ def index():
     return render_template("index.html", reviews=reviews)
 
 
+
 @app.get("/profile")
 @login_required
 def profile():
-    # Retrieve reviews written by the logged-in user
     user_reviews = list(
         reviews_collection.find(
             {"author_id": current_user.id}
         ).sort("created_at", -1)
     )
+
+    user_document = users_collection.find_one(
+        {"_id": ObjectId(current_user.id)}
+    )
+
+    if user_document is None:
+        abort(404)
+
+    favorites = user_document.get("favorites", [])
+    want_to_go = user_document.get("want_to_go", [])
 
     return render_template(
         "profile.html",
@@ -202,9 +228,69 @@ def profile():
         reviews=user_reviews,
         followers_count=0,
         following_count=0,
-        favorites=[],
-        want_to_go=[],
+        favorites=favorites,
+        want_to_go=want_to_go,
+        dining_halls=DINING_HALLS,
     )
+
+
+@app.post("/profile/lists/<list_type>/add")
+@login_required
+def add_dining_hall(list_type):
+    field = SAVED_LIST_FIELDS.get(list_type)
+
+    if field is None:
+        abort(404)
+
+    dining_hall = request.form.get(
+        "dining_hall", ""
+    ).strip()
+
+    if dining_hall not in DINING_HALLS:
+        flash("Please select a valid dining hall.", "error")
+        return redirect(url_for("profile"))
+
+    users_collection.update_one(
+        {"_id": ObjectId(current_user.id)},
+        {
+            "$addToSet": {
+                field: dining_hall
+            }
+        },
+    )
+
+    flash("Dining hall saved successfully.", "success")
+    return redirect(url_for("profile"))
+
+
+@app.post("/profile/lists/<list_type>/remove")
+@login_required
+def remove_dining_hall(list_type):
+    field = SAVED_LIST_FIELDS.get(list_type)
+
+    if field is None:
+        abort(404)
+
+    dining_hall = request.form.get(
+        "dining_hall", ""
+    ).strip()
+
+    if dining_hall not in DINING_HALLS:
+        flash("Please select a valid dining hall.", "error")
+        return redirect(url_for("profile"))
+
+    users_collection.update_one(
+        {"_id": ObjectId(current_user.id)},
+        {
+            "$pull": {
+                field: dining_hall
+            }
+        },
+    )
+
+    flash("Dining hall removed successfully.", "success")
+    return redirect(url_for("profile"))
+
 
 
 @app.route("/reviews/new", methods=["GET", "POST"])

@@ -1,0 +1,121 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.site-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.site-nav {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.site-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  font-size: 20px;
+  font-weight: 700;
+  color: #57068c;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.logo-icon {
+  font-size: 24px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.nav-link {
+  color: #333333;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: #57068c;
+}
+
+.nav-username {
+  background: #f4f0f8;
+  color: #57068c;
+  padding: 9px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.logout-form {
+  margin: 0;
+}
+
+.logout-btn {
+  background: white;
+  border: 1px solid #d6c7e2;
+  border-radius: 8px;
+  padding: 9px 15px;
+  color: #57068c;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: #f4f0f8;
+}
+
+
+
+@media (max-width: 700px) {
+  .site-nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .site-logo {
+    justify-content: center;
+  }
+
+  .nav-links {
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .nav-link {
+    font-size: 13px;
+  }
+
+  .nav-username {
+    font-size: 12px;
+  }
+}
+.nav-link:focus-visible,
+.site-logo:focus-visible,
+.logout-btn:focus-visible {
+  outline: 2px solid #57068c;
+  outline-offset: 3px;
+}

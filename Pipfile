@@ -10,6 +10,8 @@ python-dotenv = "*"
 flask-login = "*"
 
 [dev-packages]
+pytest = "*"
+mongomock = "*"
 
 [requires]
 python_version = "3.12"

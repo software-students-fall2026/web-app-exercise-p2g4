@@ -51,10 +51,7 @@
   gap: 5px;
 }
 
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-}
+
 
 .profile-stats strong {
   font-size: 22px;
@@ -92,6 +89,15 @@ body {
 .review-rating {
   color: #57068c;
   font-weight: bold;
+  font-size: 19px;
+  letter-spacing: 2px;
+}
+
+.review-rating span {
+  font-size: 13px;
+  font-weight: normal;
+  letter-spacing: normal;
+  color: #777;
 }
 
 @media (max-width: 480px) {
@@ -103,122 +109,6 @@ body {
     grid-template-columns: 1fr;
   }
 }
-
-
-
-
-.site-header {
-  background: #ffffff;
-  border-bottom: 1px solid #e5e5e5;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.site-nav {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 16px 24px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-}
-
-.site-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  font-size: 20px;
-  font-weight: 700;
-  color: #57068c;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.logo-icon {
-  font-size: 24px;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.nav-link {
-  color: #333333;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.nav-link:hover {
-  color: #57068c;
-}
-
-.nav-username {
-  background: #f4f0f8;
-  color: #57068c;
-  padding: 9px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.logout-form {
-  margin: 0;
-}
-
-.logout-btn {
-  background: white;
-  border: 1px solid #d6c7e2;
-  border-radius: 8px;
-  padding: 9px 15px;
-  color: #57068c;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.logout-btn:hover {
-  background: #f4f0f8;
-}
-
-
-
-@media (max-width: 700px) {
-  .site-nav {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-    padding: 16px;
-  }
-
-  .site-logo {
-    justify-content: center;
-  }
-
-  .nav-links {
-    justify-content: center;
-    gap: 12px;
-  }
-
-  .nav-link {
-    font-size: 13px;
-  }
-
-  .nav-username {
-    font-size: 12px;
-  }
-}
-
-
 
 
 .review-date {
@@ -243,4 +133,171 @@ body {
 
 .edit-review-btn:hover {
   background: #400066;
+}
+
+
+
+
+.review-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.review-actions form {
+  margin: 0;
+}
+
+.review-actions .edit-review-btn {
+  margin-top: 0;
+}
+
+.delete-review-btn {
+  padding: 9px 15px;
+  background: #fff;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.delete-review-btn:hover {
+  background: #fff1ef;
+}
+
+
+
+
+.review-rating span {
+  font-size: 13px;
+  letter-spacing: normal;
+  color: #777;
+}
+
+
+
+.empty-reviews {
+  text-align: center;
+  padding: 30px 20px;
+  border: 1px dashed #d6c7e2;
+  border-radius: 12px;
+  background: #faf8fc;
+}
+
+.empty-reviews p {
+  color: #777;
+  margin-bottom: 15px;
+}
+
+@media (max-width: 480px) {
+  .review-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .review-actions .edit-review-btn,
+  .review-actions .delete-review-btn {
+    box-sizing: border-box;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+
+/* Phase 2: Dining list forms */
+
+.add-hall-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.add-hall-form label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+.add-hall-form select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #d6c7e2;
+  border-radius: 8px;
+  background: white;
+  color: #333;
+  font-size: 14px;
+}
+
+.add-hall-form select:focus {
+  outline: 2px solid #57068c;
+  outline-offset: 2px;
+}
+
+.add-hall-btn {
+  padding: 11px 15px;
+  background: #57068c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-hall-btn:hover {
+  background: #400066;
+}
+
+
+.saved-halls {
+  margin-top: 16px;
+}
+
+.saved-hall-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.saved-hall-item:last-child {
+  border-bottom: none;
+}
+
+.saved-hall-item span {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.saved-hall-item form {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.remove-hall-btn {
+  padding: 7px 10px;
+  background: white;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.remove-hall-btn:hover {
+  background: #fff1ef;
+}
+
+.saved-halls > p {
+  color: #777;
+  font-size: 14px;
 }
