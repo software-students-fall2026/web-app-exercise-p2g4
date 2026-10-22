@@ -8,6 +8,41 @@
     </a>
   </div>
 
+  <form method="get" action="{{ url_for('index') }}" class="filter-form">
+    <label>
+      Dining hall
+      <select name="dining_hall">
+        <option value="">All dining halls</option>
+        {% for hall in dining_halls %}
+          <option value="{{ hall }}" {% if hall == selected_hall %}selected{% endif %}>{{ hall }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>
+      User
+      <select name="user">
+        <option value="">All users</option>
+        {% for name in usernames %}
+          <option value="{{ name }}" {% if name == selected_user %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>
+      Sort by
+      <select name="sort">
+        <option value="newest" {% if selected_sort == "newest" %}selected{% endif %}>Newest</option>
+        <option value="oldest" {% if selected_sort == "oldest" %}selected{% endif %}>Oldest</option>
+        <option value="highest" {% if selected_sort == "highest" %}selected{% endif %}>Highest rank</option>
+        <option value="lowest" {% if selected_sort == "lowest" %}selected{% endif %}>Lowest rank</option>
+      </select>
+    </label>
+
+    <button type="submit">Apply</button>
+    <a href="{{ url_for('index') }}">Clear</a>
+  </form>
+
   {% if reviews %}
     {% for review in reviews %}
       <article class="review-card">
