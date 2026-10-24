@@ -318,11 +318,44 @@ def logout():
     return redirect(url_for("login"))
 
 
+SORT_OPTIONS = {
+    "newest": ("created_at", -1),
+    "oldest": ("created_at", 1),
+    "highest": ("rank", -1),
+    "lowest": ("rank", 1),
+}
+
+
 @app.get("/")
 @login_required
 def index():
-    reviews = list(reviews_collection.find().sort("created_at", DESCENDING))
-    return render_template("index.html", reviews=reviews)
+    selected_hall = request.args.get("dining_hall", "").strip()
+    selected_user = request.args.get("user", "").strip()
+    selected_sort = request.args.get("sort", "newest")
+    if selected_sort not in SORT_OPTIONS:
+        selected_sort = "newest"
+
+    query = {}
+    if selected_hall:
+        query["dining_hall_name"] = selected_hall
+    if selected_user:
+        query["author_username"] = selected_user
+
+    field, direction = SORT_OPTIONS[selected_sort]
+    reviews = list(reviews_collection.find(query).sort(field, direction))
+
+    dining_halls = sorted(h for h in reviews_collection.distinct("dining_hall_name") if h)
+    usernames = sorted(u for u in reviews_collection.distinct("author_username") if u)
+
+    return render_template(
+        "index.html",
+        reviews=reviews,
+        dining_halls=dining_halls,
+        usernames=usernames,
+        selected_hall=selected_hall,
+        selected_user=selected_user,
+        selected_sort=selected_sort,
+    )
 
 
 @app.route("/profile", methods=["GET", "POST"])
