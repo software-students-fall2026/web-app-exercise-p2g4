@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="page-heading">
+    <h1>Followers of {{ profile_user.username }}</h1>
+
+    <a
+      href="{{ url_for('public_profile', user_id=profile_user._id) }}"
+    >
+      Back to profile
+    </a>
+  </div>
+
+  <p class="metadata">
+    Usernames in this list are not profile links.
+  </p>
+
+  {% if followers %}
+    <ul>
+      {% for follower in followers %}
+        <li>
+          <strong>{{ follower.username }}</strong>
+
+          {% if follower.get("favorite_restaurant") %}
+            — Favourite: {{ follower.favorite_restaurant }}
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>{{ profile_user.username }} has no followers yet.</p>
+  {% endif %}
+{% endblock %}

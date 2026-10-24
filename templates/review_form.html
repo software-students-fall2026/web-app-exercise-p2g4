@@ -6,12 +6,18 @@
   <form method="post">
     <label>
       Dining hall
-      <input
-        type="text"
-        name="dining_hall_name"
-        required
-        value="{{ review.get('dining_hall_name', '') }}"
-      >
+      <select name="dining_hall_name" required>
+        <option value="">Choose a dining hall</option>
+
+        {% for dining_hall in dining_halls %}
+          <option
+            value="{{ dining_hall }}"
+            {% if review.get("dining_hall_name") == dining_hall %}selected{% endif %}
+          >
+            {{ dining_hall }}
+          </option>
+        {% endfor %}
+      </select>
     </label>
 
     <label>
@@ -32,7 +38,7 @@
         {% for value in range(1, 6) %}
           <option
             value="{{ value }}"
-            {% if review.get('rank', 0)|int == value %}selected{% endif %}
+            {% if review.get("rank", 0)|int == value %}selected{% endif %}
           >
             {{ value }} / 5
           </option>
@@ -42,7 +48,7 @@
 
     <label>
       Comment
-      <textarea name="comment" rows="5">{{ review.get('comment', '') }}</textarea>
+      <textarea name="comment" rows="5">{{ review.get("comment", "") }}</textarea>
     </label>
 
     <label>
@@ -51,7 +57,7 @@
         type="date"
         name="meal_date"
         required
-        value="{{ review.get('meal_date', '') }}"
+        value="{{ review.get("meal_date", "") }}"
       >
     </label>
 
