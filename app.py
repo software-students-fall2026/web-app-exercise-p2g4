@@ -73,6 +73,12 @@ reviews_collection.create_index(
 )
 
 
+SAVED_LIST_FIELDS = {
+    "favorites": "favorites",
+    "want_to_go": "want_to_go",
+}
+
+
 class User(UserMixin):
     def __init__(self, user_document):
         self.id = str(user_document["_id"])
@@ -361,11 +367,6 @@ def index():
 @app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
-    """
-    Own profile:
-    - GET: display profile
-    - POST: save Favourite Restaurant
-    """
     profile_user = get_user_or_404(current_user.id)
 
     if request.method == "POST":
@@ -383,17 +384,26 @@ def profile():
                     }
                 },
             )
-
             flash("Profile saved.", "success")
             return redirect(url_for("profile"))
+
+    user_reviews = list(
+        reviews_collection.find(
+            {"author_id": current_user.id}
+        ).sort("created_at", DESCENDING)
+    )
 
     profile_data = get_profile_data(profile_user)
 
     return render_template(
         "profile.html",
+        profile=current_user,
         profile_user=profile_user,
+        reviews=user_reviews,
         is_own_profile=True,
         is_following=False,
+        favorites=profile_user.get("favorites", []),
+        want_to_go=profile_user.get("want_to_go", []),
         dining_halls=DINING_HALLS,
         **profile_data,
     )
@@ -420,9 +430,18 @@ def public_profile(user_id):
     )
 
     profile_data = get_profile_data(profile_user)
+    user_reviews = list(
+        reviews_collection.find({"author_id": str(profile_user["_id"])}).sort(
+            "created_at", DESCENDING
+        )
+    )
 
     return render_template(
         "profile.html",
+        profile=User(profile_user),
+        reviews=user_reviews,
+        favorites=profile_user.get("favorites", []),
+        want_to_go=profile_user.get("want_to_go", []),
         profile_user=profile_user,
         is_own_profile=False,
         is_following=is_following,
@@ -519,6 +538,64 @@ def following_list(user_id):
         profile_user=profile_user,
         following=following,
     )
+
+
+@app.post("/profile/lists/<list_type>/add")
+@login_required
+def add_dining_hall(list_type):
+    field = SAVED_LIST_FIELDS.get(list_type)
+
+    if field is None:
+        abort(404)
+
+    dining_hall = request.form.get(
+        "dining_hall", ""
+    ).strip()
+
+    if dining_hall not in DINING_HALLS:
+        flash("Please select a valid dining hall.", "error")
+        return redirect(url_for("profile"))
+
+    users_collection.update_one(
+        {"_id": ObjectId(current_user.id)},
+        {
+            "$addToSet": {
+                field: dining_hall
+            }
+        },
+    )
+
+    flash("Dining hall saved successfully.", "success")
+    return redirect(url_for("profile"))
+
+
+@app.post("/profile/lists/<list_type>/remove")
+@login_required
+def remove_dining_hall(list_type):
+    field = SAVED_LIST_FIELDS.get(list_type)
+
+    if field is None:
+        abort(404)
+
+    dining_hall = request.form.get(
+        "dining_hall", ""
+    ).strip()
+
+    if dining_hall not in DINING_HALLS:
+        flash("Please select a valid dining hall.", "error")
+        return redirect(url_for("profile"))
+
+    users_collection.update_one(
+        {"_id": ObjectId(current_user.id)},
+        {
+            "$pull": {
+                field: dining_hall
+            }
+        },
+    )
+
+    flash("Dining hall removed successfully.", "success")
+    return redirect(url_for("profile"))
 
 
 @app.route("/reviews/new", methods=["GET", "POST"])

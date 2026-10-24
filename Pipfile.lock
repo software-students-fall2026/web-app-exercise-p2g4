@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2c1d5bfbcef9bb7cb93099513851776406070e2dbcedb3966da3f29c0a4289d2"
+            "sha256": "55492e316718fdb49ee7ff50da58e6d67a6aba0d7dbd31228866401f63ef9ade"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -327,5 +327,70 @@
             "version": "==3.1.9"
         }
     },
-    "develop": {}
+    "develop": {
+        "iniconfig": {
+            "hashes": [
+                "sha256:67f4b9c50da0dedf52af349e7749a80a9057a5031199791b906c3bb3ae878960",
+                "sha256:9121e2c1fdb355232495be3194c8dfe87ccc2d5dee45947b78e68f499790d7a7"
+            ],
+            "markers": "python_version >= '3.10'",
+            "version": "==2.3.1"
+        },
+        "mongomock": {
+            "hashes": [
+                "sha256:32667b79066fabc12d4f17f16a8fd7361b5f4435208b3ba32c226e52212a8c30",
+                "sha256:5ef86bd12fc8806c6e7af32f21266c61b6c4ba96096f85129852d1c4fec1327e"
+            ],
+            "index": "pypi",
+            "version": "==4.3.0"
+        },
+        "packaging": {
+            "hashes": [
+                "sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79",
+                "sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+            ],
+            "markers": "python_version >= '3.9'",
+            "version": "==26.3"
+        },
+        "pluggy": {
+            "hashes": [
+                "sha256:7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec",
+                "sha256:d1eaa46ebb595891b860ab086b4d09c8588af65ebd4361b8e8f4bb8920b90ba8"
+            ],
+            "markers": "python_version >= '3.10'",
+            "version": "==1.7.0"
+        },
+        "pygments": {
+            "hashes": [
+                "sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9",
+                "sha256:610ca751c9bc2492b38eb9a38a7fbc93edbbb2d7182edaf34e66ae493dee5c8c"
+            ],
+            "markers": "python_version >= '3.9'",
+            "version": "==2.21.0"
+        },
+        "pytest": {
+            "hashes": [
+                "sha256:1088fbde8f2b49d95a549a195707afa7a76a3ce9bcadc26b6d71f0ffda5fe313",
+                "sha256:37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.10'",
+            "version": "==9.1.1"
+        },
+        "pytz": {
+            "hashes": [
+                "sha256:e658af3757f9e26a9d25dd2aff38335acd92bc9104f890a894b2c1ba28311b03",
+                "sha256:fa23724b9c486543b9ff54a327ee7569ac83ade54bb9afd0fc18676620401c86"
+            ],
+            "version": "==2026.5"
+        },
+        "sentinels": {
+            "hashes": [
+                "sha256:3c2f64f754187c19e0a1a029b148b74cf58dd12ec27b4e19c0e5d6e22b5a9a86",
+                "sha256:835d3b28f3b47f5284afa4bf2db6e00f2dc5f80f9923d4b7e7aeeeccf6146a11"
+            ],
+            "markers": "python_version >= '3.9'",
+            "version": "==1.1.1"
+        }
+    }
 }

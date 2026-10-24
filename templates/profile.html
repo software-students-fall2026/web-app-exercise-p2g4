@@ -1,152 +1,184 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+{% endblock %}
+
 {% block content %}
-  <div class="profile-page">
-    <section class="profile-header">
-      <div class="profile-avatar">
-        {{ profile_user.username[0]|upper }}
-      </div>
+<div class="profile-page">
 
-      <div class="profile-info">
-        {% if is_own_profile %}
-          <h1>My Profile</h1>
+  <section class="profile-header">
+    <div class="profile-avatar">
+      {{ profile_user.username[0]|upper }}
+    </div>
+    <div class="profile-info">
+      <h1>{{ profile_user.username }}</h1>
+      <p>NYU Dining Explorer</p>
+    </div>
+  </section>
+
+  <section class="profile-stats">
+    <div>
+      <strong>{{ reviews|length }}</strong>
+      <span>Reviews</span>
+    </div>
+    <div>
+      <a href="{{ url_for('followers_list', user_id=profile_user._id) }}">
+        <strong>{{ followers_count }}</strong>
+        <span>Followers</span>
+      </a>
+    </div>
+    <div>
+      <a href="{{ url_for('following_list', user_id=profile_user._id) }}">
+        <strong>{{ following_count }}</strong>
+        <span>Following</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="profile-lists">
+    <h2>Profile Information</h2>
+    <div class="list-grid">
+      <div class="list-card">
+        <h3>Username</h3>
+        <p>{{ profile_user.username }}</p>
+      </div>
+      <div class="list-card">
+        <h3>Favourite Restaurant</h3>
+        {% if profile_user.get("favorite_restaurant") %}
+          <p>{{ profile_user.favorite_restaurant }}</p>
         {% else %}
-          <h1>{{ profile_user.username }}'s Profile</h1>
+          <p>No favourite selected.</p>
         {% endif %}
-
-        <p>NYU Dining Explorer</p>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="profile-stats">
-      <div>
-        <strong>
-          {% if recent_review %}1{% else %}0{% endif %}
-        </strong>
-        <span>Recent Review</span>
-      </div>
+  {% if is_own_profile %}
+  <section class="profile-lists">
+    <h2>Profile Settings</h2>
+    <form method="post">
+      <label for="favorite-restaurant">Favourite Restaurant</label>
+      <select id="favorite-restaurant" name="favorite_restaurant">
+        <option value="" {% if not profile_user.get("favorite_restaurant") %}selected{% endif %}>
+          No favourite selected
+        </option>
+        {% for dining_hall in dining_halls %}
+          <option value="{{ dining_hall }}" {% if profile_user.get("favorite_restaurant") == dining_hall %}selected{% endif %}>
+            {{ dining_hall }}
+          </option>
+        {% endfor %}
+      </select>
+      <p class="help-text">Username and password cannot be changed here.</p>
+      <button type="submit">Save changes</button>
+    </form>
+  </section>
 
-      <div>
-        <a
-          href="{{ url_for('followers_list', user_id=profile_user._id) }}"
-        >
-          <strong>{{ followers_count }}</strong>
-          <span>Followers</span>
-        </a>
-      </div>
-
-      <div>
-        <a
-          href="{{ url_for('following_list', user_id=profile_user._id) }}"
-        >
-          <strong>{{ following_count }}</strong>
-          <span>Following</span>
-        </a>
-      </div>
-    </section>
-
-    <section class="profile-lists">
-      <h2>Profile Information</h2>
-
-      <div class="list-grid">
-        <div class="list-card">
-          <h3>Username</h3>
-          <p>{{ profile_user.username }}</p>
-        </div>
-
-        <div class="list-card">
-          <h3>Favourite Restaurant</h3>
-
-          {% if profile_user.get("favorite_restaurant") %}
-            <p>{{ profile_user.favorite_restaurant }}</p>
-          {% else %}
-            <p>No favourite selected.</p>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-
-    {% if is_own_profile %}
-      <section class="profile-lists">
-        <h2>Profile Settings</h2>
-
-        <form method="post">
-          <label>
-            Favourite Restaurant
-            <select name="favorite_restaurant">
-              <option
-                value=""
-                {% if not profile_user.get("favorite_restaurant") %}selected{% endif %}
-              >
-                No favourite selected
-              </option>
-
-              {% for dining_hall in dining_halls %}
-                <option
-                  value="{{ dining_hall }}"
-                  {% if profile_user.get("favorite_restaurant") == dining_hall %}selected{% endif %}
-                >
-                  {{ dining_hall }}
-                </option>
-              {% endfor %}
-            </select>
-          </label>
-
-          <p class="help-text">
-            Username and password cannot be changed here.
-          </p>
-
-          <button type="submit">Save changes</button>
+  <section class="profile-lists">
+    <h2>My Dining Lists</h2>
+    <div class="list-grid">
+      <div class="list-card">
+        <h3>❤️ Favorites</h3>
+        <form action="{{ url_for('add_dining_hall', list_type='favorites') }}" method="post" class="add-hall-form">
+          <label for="favorite-hall">Choose a dining hall</label>
+          <select id="favorite-hall" name="dining_hall" required>
+            <option value="" disabled selected>Select a dining hall</option>
+            {% for hall in dining_halls %}
+              <option value="{{ hall }}">{{ hall }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="add-hall-btn">Add Favorite</button>
         </form>
-      </section>
-    {% else %}
-      <section class="profile-lists">
-        <h2>Follow</h2>
-
-        {% if is_following %}
-          <form
-            action="{{ url_for('unfollow_user', user_id=profile_user._id) }}"
-            method="post"
-          >
-            <button type="submit">Unfollow</button>
-          </form>
-        {% else %}
-          <form
-            action="{{ url_for('follow_user', user_id=profile_user._id) }}"
-            method="post"
-          >
-            <button type="submit">Follow</button>
-          </form>
-        {% endif %}
-      </section>
-    {% endif %}
-
-    <section class="profile-reviews">
-      <h2>Recent Comment</h2>
-
-      {% if recent_review %}
-        <article class="review-card">
-          <h3>{{ recent_review.food }}</h3>
-
-          <p><strong>{{ recent_review.dining_hall_name }}</strong></p>
-
-          <p class="review-rating">
-            Rating: {{ recent_review.rank }}/5
-          </p>
-
-          {% if recent_review.comment %}
-            <p>{{ recent_review.comment }}</p>
+        <div class="saved-halls">
+          {% for hall in favorites %}
+            <div class="saved-hall-item">
+              <span>{{ hall }}</span>
+              <form action="{{ url_for('remove_dining_hall', list_type='favorites') }}" method="post">
+                <input type="hidden" name="dining_hall" value="{{ hall }}">
+                <button type="submit" class="remove-hall-btn">Remove</button>
+              </form>
+            </div>
           {% else %}
-            <p>No written comment.</p>
-          {% endif %}
+            <p>No favorites yet.</p>
+          {% endfor %}
+        </div>
+      </div>
 
-          <p class="review-date">
-            Meal date: {{ recent_review.meal_date }}
-          </p>
-        </article>
-      {% else %}
-        <p>This user has not written a review yet.</p>
-      {% endif %}
-    </section>
-  </div>
+      <div class="list-card">
+        <h3>🔖 Want to Go</h3>
+        <form action="{{ url_for('add_dining_hall', list_type='want_to_go') }}" method="post" class="add-hall-form">
+          <label for="want-to-go-hall">Choose a dining hall</label>
+          <select id="want-to-go-hall" name="dining_hall" required>
+            <option value="" disabled selected>Select a dining hall</option>
+            {% for hall in dining_halls %}
+              <option value="{{ hall }}">{{ hall }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="add-hall-btn">Add to Want to Go</button>
+        </form>
+        <div class="saved-halls">
+          {% for hall in want_to_go %}
+            <div class="saved-hall-item">
+              <span>{{ hall }}</span>
+              <form action="{{ url_for('remove_dining_hall', list_type='want_to_go') }}" method="post">
+                <input type="hidden" name="dining_hall" value="{{ hall }}">
+                <button type="submit" class="remove-hall-btn">Remove</button>
+              </form>
+            </div>
+          {% else %}
+            <p>No saved dining halls yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+  {% else %}
+  <section class="profile-lists">
+    <h2>Follow</h2>
+    {% if is_following %}
+      <form action="{{ url_for('unfollow_user', user_id=profile_user._id) }}" method="post">
+        <button type="submit">Unfollow</button>
+      </form>
+    {% else %}
+      <form action="{{ url_for('follow_user', user_id=profile_user._id) }}" method="post">
+        <button type="submit">Follow</button>
+      </form>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <section class="profile-reviews">
+    <h2>Recent Activity</h2>
+    {% for review in reviews %}
+      <article class="review-card">
+        <h3>{{ review.dining_hall_name }}</h3>
+        <p><strong>Food:</strong> {{ review.food }}</p>
+        <p class="review-rating">
+          {{ "★" * review.rank }}{{ "☆" * (5 - review.rank) }}
+          <span>({{ review.rank }}/5)</span>
+        </p>
+        {% if review.comment %}
+          <p>{{ review.comment }}</p>
+        {% endif %}
+        <p class="review-date">Meal date: {{ review.meal_date }}</p>
+        {% if is_own_profile %}
+          <div class="review-actions">
+            <a href="{{ url_for('edit_review', review_id=review._id) }}" class="edit-review-btn">Edit Review</a>
+            <form action="{{ url_for('delete_review', review_id=review._id) }}" method="post"
+                  onsubmit="return confirm('Are you sure you want to delete this review?');">
+              <button type="submit" class="delete-review-btn">Delete</button>
+            </form>
+          </div>
+        {% endif %}
+      </article>
+    {% else %}
+      <div class="empty-reviews">
+        <p>No reviews yet.</p>
+        {% if is_own_profile %}
+          <a href="{{ url_for('new_review') }}" class="edit-review-btn">Write Your First Review</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </section>
+</div>
 {% endblock %}
