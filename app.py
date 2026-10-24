@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime, timezone
 
 from bson import ObjectId
@@ -50,7 +51,7 @@ db = client[os.environ["MONGO_DB_NAME"]]
 users_collection = db["users"]
 reviews_collection = db["reviews"]
 follows_collection = db["follows"]
-
+dining_halls_collection = db["dining_halls"]
 
 # Protect against duplicate usernames.
 users_collection.create_index("username", unique=True)
@@ -71,6 +72,12 @@ reviews_collection.create_index(
         ("created_at", DESCENDING),
     ]
 )
+
+# "slug" for each dining hall name
+dining_halls_collection.create_index("slug", unique=True)
+
+# index for each dining hall (for review search)
+reviews_collection.create_index("dining_hall_name")
 
 
 class User(UserMixin):
@@ -243,6 +250,81 @@ def get_favorite_restaurant_from_form():
         return None, "Please choose a restaurant from the list."
 
     return favorite_restaurant, None
+
+@app.template_filter("slugify")
+def make_slug(name):
+    # "Slug"-ify dining hall names
+    return name.lower().replace(" ", "-")
+
+def findhall(slug):
+    dining_hall = dining_halls_collection.find_one({"slug": slug})
+    if dining_hall is None:
+        abort(404)
+    return dining_hall
+
+def calc_avgstar(tot, cnt):
+    # avg. calculator. Returns "None" if cnt==0
+    if cnt==0:
+        return None
+    return tot/cnt
+
+def get_stat_hall(dining_hall_name):
+    reviews= reviews_collection.find({"dining_hall_name": dining_hall_name},
+                                     {"rank": 1})
+
+    tot = 0
+    cnt = 0
+    star_cnt = {5:0, 4:0, 3:0, 2:0, 1:0}
+
+    for review in reviews:
+        rank = review.get("rank")
+
+        if rank not in range(1,6):
+            continue
+
+        tot= tot+rank
+        cnt= cnt+1
+        star_cnt[rank]= star_cnt[rank]+1
+
+    return {
+        "avg": calc_avgstar(tot, cnt),
+        "cnt": cnt,
+        "star_cnt": star_cnt
+    }
+
+def get_stat():
+    tot= {}
+    cnt= {}
+
+    for name in DINING_HALLS:
+        tot[name]= 0
+        cnt[name]= 0
+
+    reviews= reviews_collection.find(
+        {},
+        {"dining_hall_name":1, "rank":1}
+    )
+
+    for review in reviews:
+        name = review.get("dining_hall_name")
+        rank = review.get("rank")
+
+        if name not in totals:
+            continue
+
+        if rank not in range(1,6):
+            continue
+
+        tot[name] = tot[name]+rank
+        cnt[name] = cnt[name]+1
+
+    all_stats = {}
+
+    for name in DINING_HALLS:
+        all_stats[name] = {
+            "avg": calc_avgstar(tot[name], cnt[name]),
+            "cnt": cnt[name]
+        }
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -576,6 +658,44 @@ def delete_review(review_id):
     flash("Review deleted.", "success")
     return redirect(url_for("index"))
 
+
+@app.get("/dining-halls")
+@login_required
+def dining_halls_list():
+    search = request.args.get("q", "").strip()
+
+    if search:
+        query = {"name": {"$regex": re.escape(search), "$options": "i"}}
+    else:
+        query = {}
+
+    halls = list(dining_halls_collection.find(query).sort("name", ASCENDING))
+    stats = get_stat()
+
+    for hall in halls:
+        hall["stat"] = stats.get(hall["name"], {"avg": None, "cnt": 0})
+
+    return render_template("dining_halls.html", halls=halls, search=search)
+
+
+@app.get("/dining-halls/<slug>")
+@login_required
+def dining_hall_detail(slug):
+    hall = findhall(slug)
+    stat = get_stat_hall(hall["name"])
+
+    recent_reviews = list(
+        reviews_collection.find({"dining_hall_name": hall["name"]})
+        .sort("created_at", DESCENDING)
+        .limit(5)
+    )
+
+    return render_template(
+        "dining_hall_detail.html",
+        hall=hall,
+        stat=stat,
+        recent_reviews=recent_reviews,
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
