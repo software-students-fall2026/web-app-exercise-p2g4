@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="hall-detail">
+    <p class="back-link">
+      <a href="{{ url_for('dining_halls_list') }}">Back to all dining halls</a>
+    </p>
+
+    {% if hall.image_file %}
+      <img
+        class="hall-photo"
+        src="{{ url_for('static', filename='images/dining_halls/' + hall.image_file) }}"
+        alt="{{ hall.name }}"
+      >
+    {% else %}
+      <img
+        class="hall-photo"
+        src="{{ url_for('static', filename='images/dining_halls/placeholder.jpg') }}"
+        alt="{{ hall.name }}"
+      >
+    {% endif %}
+
+    <section class="hall-section">
+      <h1>{{ hall.name }}</h1>
+      <p>{{ hall.description }}</p>
+      <p><strong>Hours:</strong> {{ hall.hours }}</p>
+    </section>
+
+    <section class="hall-section">
+      <h2>Ratings</h2>
+
+      {% if stat.avg is none %}
+        <p>No ratings yet. Contribute to the first ever review .</p>
+      {% else %}
+        <p class="hall-avg">
+          {{ stat.avg }} / 5
+          ({{ stat.cnt }} review{% if stat.cnt != 1 %}s{% endif %})
+        </p>
+
+        <ul class="star-list">
+          {% for star, num in stat.star_cnt.items() %}
+            <li>
+              <span>{{ star }} star{% if star != 1 %}s{% endif %}</span>
+              <progress value="{{ num }}" max="{{ stat.cnt }}"></progress>
+              <span>{{ num }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <a class="button-link" href="{{ url_for('new_review') }}">Add a review</a>
+    </section>
+
+    <section class="hall-section">
+      <h2>Location</h2>
+      <p><strong>Building:</strong> {{ hall.building }}</p>
+      <p><strong>Address:</strong> {{ hall.address }}</p>
+
+      <a
+        href="https://www.google.com/maps/search/?api=1&query={{ (hall.name + ', ' + hall.address)|urlencode }}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Open in Google Maps
+      </a>
+    </section>
+
+    <section class="hall-section">
+      <h2>Recent Reviews</h2>
+
+      {% if recent_reviews %}
+        {% for review in recent_reviews %}
+          <article class="review-card">
+            <h3>{{ review.food }}</h3>
+            <p>Rank: {{ review.rank }} / 5</p>
+
+            {% if review.comment %}
+              <p>{{ review.comment }}</p>
+            {% endif %}
+
+            <p class="metadata">
+              {% if review.get("author_id") and review.get("author_username") %}
+                By
+                <a href="{{ url_for('public_profile', user_id=review.author_id) }}">
+                  {{ review.author_username }}
+                </a>
+                on {{ review.meal_date }}
+              {% else %}
+                By an unavailable user on {{ review.meal_date }}
+              {% endif %}
+            </p>
+          </article>
+        {% endfor %}
+      {% else %}
+        <p>No reviews for this dining hall yet. Why not add one?</p>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

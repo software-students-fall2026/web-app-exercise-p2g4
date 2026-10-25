@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="page-heading">
+    <h1>N. Y. U. Dining Halls</h1>
+  </div>
+
+  <form method="get" action="{{ url_for('dining_halls_list') }}" class="hall-search">
+    <input
+      type="text"
+      name="q"
+      value="{{ search }}"
+      placeholder="Search by ㅜame"
+    >
+    <button type="submit">Search</button>
+  </form>
+
+  {% if search %}
+    <p class="search-summary">
+      {{ halls|length }} result(s) for "{{ search }}"
+      <a href="{{ url_for('dining_halls_list') }}">Clear</a>
+    </p>
+  {% endif %}
+
+  {% if halls %}
+    <div class="hall-list">
+      {% for hall in halls %}
+        <a class="hall-card" href="{{ url_for('dining_hall_detail', slug=hall.slug) }}">
+          {% if hall.image_file %}
+            <img
+              src="{{ url_for('static', filename='images/dining_halls/' + hall.image_file) }}"
+              alt="{{ hall.name }}"
+              loading="lazy"
+            >
+          {% else %}
+            <img
+              src="{{ url_for('static', filename='images/dining_halls/placeholder.jpg') }}"
+              alt="{{ hall.name }}"
+              loading="lazy"
+            >
+          {% endif %}
+
+          <div class="hall-card-body">
+            <h2>{{ hall.name }}</h2>
+
+            {% if hall.stat.avg is none %}
+              <p class="hall-rating">No ratings yet</p>
+            {% else %}
+              <p class="hall-rating">
+                {{ hall.stat.avg }} / 5
+                ({{ hall.stat.cnt }} review{% if hall.stat.cnt != 1 %}s{% endif %})
+              </p>
+            {% endif %}
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>OOPS!!! No dining halls found.</p>
+  {% endif %}
+{% endblock %}
