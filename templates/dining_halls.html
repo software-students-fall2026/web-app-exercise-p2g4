@@ -2,30 +2,61 @@
 
 {% block content %}
   <div class="page-heading">
-    <h1>N. Y. U. Dining Halls</h1>
+    <div>
+      <p class="eyebrow">Explore campus dining</p>
+      <h1>NYU Dining Halls</h1>
+      <p class="page-description">
+        Browse dining locations and see ratings from other students.
+      </p>
+    </div>
   </div>
 
-  <form method="get" action="{{ url_for('dining_halls_list') }}" class="hall-search">
-    <input
-      type="text"
-      name="q"
-      value="{{ search }}"
-      placeholder="Search by ㅜame"
-    >
-    <button type="submit">Search</button>
+  <form
+    method="get"
+    action="{{ url_for('dining_halls_list') }}"
+    class="hall-filter"
+  >
+    <label for="hall">
+      Choose a dining hall
+      <select id="hall" name="hall">
+        <option value="">All Dining Halls</option>
+
+        {% for hall in all_halls %}
+          <option
+            value="{{ hall.slug }}"
+            {% if hall.slug == selected_slug %}selected{% endif %}
+          >
+            {{ hall.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <div class="filter-actions">
+      <button type="submit">Apply filter</button>
+
+      {% if selected_slug %}
+        <a
+          class="secondary-link"
+          href="{{ url_for('dining_halls_list') }}"
+        >
+          Show all
+        </a>
+      {% endif %}
+    </div>
   </form>
 
-  {% if search %}
-    <p class="search-summary">
-      {{ halls|length }} result(s) for "{{ search }}"
-      <a href="{{ url_for('dining_halls_list') }}">Clear</a>
-    </p>
-  {% endif %}
+  <p class="results-summary">
+    Showing {{ halls|length }} dining hall{% if halls|length != 1 %}s{% endif %}.
+  </p>
 
   {% if halls %}
     <div class="hall-list">
       {% for hall in halls %}
-        <a class="hall-card" href="{{ url_for('dining_hall_detail', slug=hall.slug) }}">
+        <a
+          class="hall-card"
+          href="{{ url_for('dining_hall_detail', slug=hall.slug) }}"
+        >
           {% if hall.image_file %}
             <img
               src="{{ url_for('static', filename='images/dining_halls/' + hall.image_file) }}"
@@ -47,15 +78,32 @@
               <p class="hall-rating">No ratings yet</p>
             {% else %}
               <p class="hall-rating">
-                {{ hall.stat.avg }} / 5
-                ({{ hall.stat.cnt }} review{% if hall.stat.cnt != 1 %}s{% endif %})
+                {{ "%.1f"|format(hall.stat.avg) }} / 5
+              </p>
+
+              <p class="hall-review-count">
+                {{ hall.stat.cnt }} review{% if hall.stat.cnt != 1 %}s{% endif %}
               </p>
             {% endif %}
+
+            <span class="hall-card-link">
+              View dining hall →
+            </span>
           </div>
         </a>
       {% endfor %}
     </div>
   {% else %}
-    <p>OOPS!!! No dining halls found.</p>
+    <section class="empty-state">
+      <h2>No dining halls found</h2>
+      <p>Choose “All Dining Halls” to return to the complete list.</p>
+
+      <a
+        class="button-link"
+        href="{{ url_for('dining_halls_list') }}"
+      >
+        Show all dining halls
+      </a>
+    </section>
   {% endif %}
 {% endblock %}

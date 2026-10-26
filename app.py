@@ -1,5 +1,5 @@
 import os
-import re
+# import re
 from datetime import datetime, timezone
 
 from bson import ObjectId
@@ -299,17 +299,16 @@ def get_stat_hall(dining_hall_name):
     }
 
 def get_stat():
-    tot= {}
-    cnt= {}
-
+    tot = {}
+    cnt = {}
 
     for name in DINING_HALLS:
-        tot[name]= 0
-        cnt[name]= 0
+        tot[name] = 0
+        cnt[name] = 0
 
-    reviews= reviews_collection.find(
+    reviews = reviews_collection.find(
         {},
-        {"dining_hall_name":1, "rank":1}
+        {"dining_hall_name": 1, "rank": 1},
     )
 
     for review in reviews:
@@ -319,21 +318,21 @@ def get_stat():
         if name not in tot:
             continue
 
-        if rank not in range(1,6):
+        if rank not in range(1, 6):
             continue
 
-        tot[name] = tot[name]+rank
-        cnt[name] = cnt[name]+1
+        tot[name] = tot[name] + rank
+        cnt[name] = cnt[name] + 1
 
     all_stats = {}
 
     for name in DINING_HALLS:
         all_stats[name] = {
             "avg": calc_avgstar(tot[name], cnt[name]),
-            "cnt": cnt[name]
+            "cnt": cnt[name],
         }
 
-        return all_stats
+    return all_stats
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -775,20 +774,53 @@ def delete_review(review_id):
 @app.get("/dining-halls")
 @login_required
 def dining_halls_list():
-    search = request.args.get("q", "").strip()
+    # Empty value means: show every dining hall.
+    selected_slug = request.args.get("hall", "").strip()
 
-    if search:
-        query = {"name": {"$regex": re.escape(search), "$options": "i"}}
-    else:
-        query = {}
+    # This supplies all dropdown options, even when the card list is filtered.
+    all_halls = list(
+        dining_halls_collection.find(
+            {},
+            {"name": 1, "slug": 1},
+        ).sort("name", ASCENDING)
+    )
 
-    halls = list(dining_halls_collection.find(query).sort("name", ASCENDING))
+    valid_slugs = {
+        hall["slug"]
+        for hall in all_halls
+        if hall.get("slug")
+    }
+
+    # Reject manually typed invalid URL values.
+    if selected_slug and selected_slug not in valid_slugs:
+        abort(404)
+
+    query = {}
+
+    if selected_slug:
+        query["slug"] = selected_slug
+
+    halls = list(
+        dining_halls_collection.find(query).sort("name", ASCENDING)
+    )
+
     stats = get_stat()
 
     for hall in halls:
-        hall["stat"] = stats.get(hall["name"], {"avg": None, "cnt": 0})
+        hall["stat"] = stats.get(
+            hall["name"],
+            {
+                "avg": None,
+                "cnt": 0,
+            },
+        )
 
-    return render_template("dining_halls.html", halls=halls, search=search)
+    return render_template(
+        "dining_halls.html",
+        halls=halls,
+        all_halls=all_halls,
+        selected_slug=selected_slug,
+    )
 
 
 @app.get("/dining-halls/<slug>")
