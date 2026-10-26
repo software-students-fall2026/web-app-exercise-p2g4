@@ -12,7 +12,34 @@ Our NYU dining hall reviews app will allow students to review and critique NYU d
 
 ## Steps necessary to run the software
 
-See instructions. Delete this line and place instructions to download, configure, and run the software here.
+### Prerequisites
+
+- Python 3 (version listed in Pipfile)
+- pipenv
+- Git
+- A MongoDB database (e.g. MongoDB Atlas) and its connection string
+
+### 1. Clone the repository
+
+```
+git clone <https://github.com/software-students-fall2026/web-app-exercise-p2g4>
+cd <repository folder>
+```
+
+### 2. Install dependencies
+
+```
+pipenv install
+```
+
+### 3. Configure environment variables
+
+- Allow your IP address under Network Access
+
+### 4. Load dining hall data (first run only)
+
+### 5. Run the app
+
 
 ## Task boards
 
