@@ -6,10 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dining Hall Reviews</title>
 
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='styles.css') }}">
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='profile.css') }}">
+  
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}">
+
+{% block extra_css %}{% endblock %}
+
 </head>
 
 <body>
@@ -21,8 +23,15 @@
         Dining Hall Reviews
       </a>
 
-      <div class="nav-links">
-        {% if current_user.is_authenticated %}
+      
+        <div class="nav-links">
+
+          <a href="{{ url_for('dining_halls') }}" class="nav-link">
+          Dining Halls
+          </a>
+
+          {% if current_user.is_authenticated %}
+
 
           <a href="{{ url_for('profile') }}" class="nav-link">
             My Profile

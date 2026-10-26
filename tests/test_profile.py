@@ -96,7 +96,7 @@ def test_add_favorite(client, user, test_app):
 
     response = client.post(
         "/profile/lists/favorites/add",
-        data={"dining_hall": "Lipton Hall"},
+        data={"dining_hall": "Lipton"},
         follow_redirects=True,
     )
 
@@ -106,7 +106,7 @@ def test_add_favorite(client, user, test_app):
         {"_id": user}
     )
 
-    assert "Lipton Hall" in saved_user["favorites"]
+    assert "Lipton" in saved_user["favorites"]
 
 
 def test_prevent_duplicate_favorites(client, user, test_app):
@@ -115,14 +115,14 @@ def test_prevent_duplicate_favorites(client, user, test_app):
     for _ in range(2):
         client.post(
             "/profile/lists/favorites/add",
-            data={"dining_hall": "Lipton Hall"},
+            data={"dining_hall": "Lipton"},
         )
 
     saved_user = test_app.users_collection.find_one(
         {"_id": user}
     )
 
-    assert saved_user["favorites"].count("Lipton Hall") == 1
+    assert saved_user["favorites"].count("Lipton") == 1
 
 
 def test_remove_favorite(client, user, test_app):
@@ -130,12 +130,12 @@ def test_remove_favorite(client, user, test_app):
 
     test_app.users_collection.update_one(
         {"_id": user},
-        {"$set": {"favorites": ["Lipton Hall"]}},
+        {"$set": {"favorites": ["Lipton"]}},
     )
 
     response = client.post(
         "/profile/lists/favorites/remove",
-        data={"dining_hall": "Lipton Hall"},
+        data={"dining_hall": "Lipton"},
         follow_redirects=True,
     )
 
@@ -145,7 +145,7 @@ def test_remove_favorite(client, user, test_app):
         {"_id": user}
     )
 
-    assert "Lipton Hall" not in saved_user["favorites"]
+    assert "Lipton" not in saved_user["favorites"]
 
 
 def test_invalid_dining_hall_is_rejected(client, user, test_app):
@@ -168,7 +168,7 @@ def test_invalid_list_type_returns_404(client, user):
 
     response = client.post(
         "/profile/lists/unknown/add",
-        data={"dining_hall": "Lipton Hall"},
+        data={"dining_hall": "Lipton"},
     )
 
     assert response.status_code == 404
@@ -239,7 +239,7 @@ def test_users_have_separate_favorites(client, user, test_app):
 
     client.post(
         "/profile/lists/favorites/add",
-        data={"dining_hall": "Lipton Hall"},
+        data={"dining_hall": "Lipton"},
     )
 
     scott = test_app.users_collection.find_one(
@@ -249,7 +249,7 @@ def test_users_have_separate_favorites(client, user, test_app):
         {"_id": other_user_id}
     )
 
-    assert scott["favorites"] == ["Lipton Hall"]
+    assert scott["favorites"] == ["Lipton"]
     assert other_student["favorites"] == ["Palladium"]
 
 
@@ -260,7 +260,7 @@ def test_profile_displays_own_reviews_only(client, user, test_app):
         {
             "author_id": str(user),
             "author_username": "scott",
-            "dining_hall_name": "Lipton Hall",
+            "dining_hall_name": "Lipton",
             "food": "Pasta",
             "rank": 5,
             "comment": "Great pasta",
@@ -294,7 +294,7 @@ def test_edit_review_updates_profile(client, user, test_app):
         "_id": review_id,
         "author_id": str(user),
         "author_username": "scott",
-        "dining_hall_name": "Lipton Hall",
+        "dining_hall_name": "Lipton",
         "food": "Pasta",
         "rank": 3,
         "comment": "Okay food",
@@ -307,7 +307,7 @@ def test_edit_review_updates_profile(client, user, test_app):
     response = client.post(
         f"/reviews/{review_id}/edit",
         data={
-            "dining_hall_name": "Lipton Hall",
+            "dining_hall_name": "Lipton",
             "food": "Pasta",
             "rank": "5",
             "comment": "Amazing food",
