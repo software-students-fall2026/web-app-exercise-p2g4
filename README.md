@@ -59,7 +59,7 @@ To configure MongoDB Atlas:
 
 The `.env` file contains sensitive information and must not be committed to GitHub.
 
-### 4. Load dining hall data (first run only)
+### 4. Load dining hall data (first run only) (It has been initialized already so u don't have to run it now)
 
 Run the database seed script:
 
@@ -83,6 +83,10 @@ Open the application in your browser:
 
 http://127.0.0.1:5000
 
+(The Account Info are sent via the team channel)
+
 ## Task boards
 
-[Task Board](https://github.com/orgs/software-students-fall2026/projects/56)
+[Task Board - Sprint 1](https://github.com/orgs/software-students-fall2026/projects/56)
+[Task Board - Sprint 2](https://github.com/orgs/software-students-fall2026/projects/91)
+
