@@ -302,6 +302,7 @@ def get_stat():
     tot= {}
     cnt= {}
 
+
     for name in DINING_HALLS:
         tot[name]= 0
         cnt[name]= 0
@@ -315,7 +316,7 @@ def get_stat():
         name = review.get("dining_hall_name")
         rank = review.get("rank")
 
-        if name not in totals:
+        if name not in tot:
             continue
 
         if rank not in range(1,6):
@@ -331,6 +332,8 @@ def get_stat():
             "avg": calc_avgstar(tot[name], cnt[name]),
             "cnt": cnt[name]
         }
+
+        return all_stats
 
 
 @app.route("/signup", methods=["GET", "POST"])
